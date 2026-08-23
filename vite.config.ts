@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/functional-group-quiz/', // Must match your GitHub repo name
+  base: '/', // Must match your GitHub repo name
 })
