@@ -1,0 +1,8 @@
+# Add your functional group images here.
+# Each file name should match the `image` path in src/data/functionalGroups.ts
+#
+# Example:
+#   phenyl.png
+#   tertiary-amine.png
+#   aldehyde.png
+#   ...

@@ -1,0 +1,33 @@
+.fg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.fg-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #f8f8f8;
+  border: 1px dashed #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.fg-image-placeholder-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+.fg-image-placeholder-hint {
+  font-size: 0.55rem;
+  color: #999;
+  word-break: break-all;
+}

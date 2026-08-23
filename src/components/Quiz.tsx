@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { functionalGroups, shuffleArray, isAnswerCorrect, type FunctionalGroup } from '../data/functionalGroups';
-import { Play, RotateCcw } from 'lucide-react';
+import { GraduationCap, ChevronDown, Pause, Play } from 'lucide-react';
+import FunctionalGroupImage from './FunctionalGroupImage';
 import './Quiz.css';
 
 interface QuizItem {
@@ -11,20 +12,24 @@ interface QuizItem {
 }
 
 const TOTAL_ITEMS = functionalGroups.length;
-const TOTAL_TIME = 10 * 60; // 10 minutes in seconds
+const TOTAL_TIME = 5 * 60;
+
+type Mode = 'quiz' | 'learn';
 
 export const Quiz = () => {
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const [mode, setMode] = useState<Mode>('quiz');
+  const [isPaused, setIsPaused] = useState(false);
+  const answerInputRef = useRef<HTMLInputElement | null>(null);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Timer effect
   useEffect(() => {
-    if (!quizStarted || finished) return;
+    if (!quizStarted || finished || mode !== 'quiz' || isPaused) return;
 
     timerIntervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -40,12 +45,17 @@ export const Quiz = () => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [quizStarted, finished]);
+  }, [quizStarted, finished, mode, isPaused]);
 
-  const initializeQuiz = () => {
-    const selected = functionalGroups.slice(0, TOTAL_ITEMS);
-    const shuffled = shuffleArray(selected);
-    const items: QuizItem[] = shuffled.map((group, index) => ({
+  useEffect(() => {
+    if (quizStarted && !finished) {
+      answerInputRef.current?.focus();
+    }
+  }, [currentIndex, quizStarted, finished]);
+
+  const initializeQuiz = (options?: { fixedOrder?: boolean }) => {
+    const groups = options?.fixedOrder ? functionalGroups : shuffleArray(functionalGroups);
+    const items: QuizItem[] = groups.map((group, index) => ({
       group,
       index,
       isCorrect: false,
@@ -53,32 +63,44 @@ export const Quiz = () => {
     }));
     setQuizItems(items);
     setQuizStarted(false);
+    setCurrentIndex(0);
     setTimeLeft(TOTAL_TIME);
     setScore(0);
     setFinished(false);
+    setIsPaused(false);
   };
 
-  // Initialize quiz items on mount
   useEffect(() => {
     initializeQuiz();
   }, []);
 
   const handleStartQuiz = () => {
+    setMode('quiz');
+    initializeQuiz();
     setQuizStarted(true);
   };
 
-  const handleInputChange = (itemIndex: number, value: string) => {
+  const handleLearnMode = () => {
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    setMode('learn');
+    setQuizStarted(false);
+    setFinished(false);
+    setTimeLeft(TOTAL_TIME);
+    setScore(0);
+    setIsPaused(false);
+    initializeQuiz({ fixedOrder: true });
+  };
+
+  const handleInputChange = (value: string) => {
     setQuizItems((prev) =>
       prev.map((item, idx) => {
-        if (idx !== itemIndex) return item;
+        if (idx !== currentIndex) return item;
 
         const isCorrect = isAnswerCorrect(value, item.group.name, item.group.alternateNames);
         const wasCorrectBefore = item.isCorrect;
 
         if (isCorrect && !wasCorrectBefore) {
           setScore((s) => s + 1);
-        } else if (!isCorrect && wasCorrectBefore) {
-          // setScore((s) => s - 1);
         }
 
         return {
@@ -90,56 +112,167 @@ export const Quiz = () => {
     );
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const handlePrev = () => {
+    setCurrentIndex((i) => Math.max(0, i - 1));
   };
 
-  
+  const handleNext = () => {
+    setCurrentIndex((i) => Math.min(quizItems.length - 1, i + 1));
+  };
+
+  const handleSelectItem = (index: number) => {
+    if (!quizStarted || finished) return;
+    setCurrentIndex(index);
+  };
+
+  const handleGiveUp = () => {
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    setFinished(true);
+  };
 
   const handleReset = () => {
     initializeQuiz();
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const isLearnMode = mode === 'learn';
+  const currentItem = quizItems[currentIndex];
+  const allCorrect = score === TOTAL_ITEMS && quizStarted;
+
+  useEffect(() => {
+    if (allCorrect && !finished) {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      setFinished(true);
+    }
+  }, [allCorrect, finished]);
+
   return (
     <div className="quiz-container">
-      {/* Header */}
-      <div className="quiz-header">
-        <div className="header-content">
-          <h1 className="quiz-title">Functional Group Quiz</h1>
-          <p className="quiz-subtitle">Identify each functional group</p>
-        </div>
+      {!quizStarted && !isLearnMode && (
+        <header className="quiz-header">
+          <div className="header-left">
+            <button className="btn-play" onClick={handleStartQuiz}>
+              PLAY QUIZ
+            </button>
+            <button className="btn-learn" onClick={handleLearnMode}>
+              <GraduationCap size={18} strokeWidth={2} />
+              Learn
+            </button>
+          </div>
 
-        <div className="stats-bar">
-          <div className="stat-item">
-            <div className="stat-label">Score</div>
-            <div className="stat-value">
-              {score}/{TOTAL_ITEMS}
+          <div className="header-right">
+            <div className="stat-block">
+              <div className="stat-label">
+                SCORE
+                <ChevronDown size={12} strokeWidth={2.5} />
+              </div>
+              <div className="stat-value">
+                {score}/{TOTAL_ITEMS}
+              </div>
+            </div>
+
+            <div className="stat-block">
+              <div className="stat-label">
+                TIMER
+                <ChevronDown size={12} strokeWidth={2.5} />
+              </div>
+              <div className="stat-value">{formatTime(timeLeft)}</div>
+            </div>
+          </div>
+        </header>
+      )}
+
+      {isLearnMode && (
+        <header className="quiz-header">
+          <div className="header-left">
+            <button className="btn-play" onClick={handleStartQuiz}>
+              PLAY QUIZ
+            </button>
+            <button className="btn-learn active" onClick={handleLearnMode}>
+              <GraduationCap size={18} strokeWidth={2} />
+              Learn
+            </button>
+          </div>
+        </header>
+      )}
+
+      {quizStarted && !finished && currentItem && (
+        <div className="quiz-active-panel">
+          <div className="active-image-box">
+            <FunctionalGroupImage group={currentItem.group} />
+          </div>
+
+          <div className="answer-section">
+            <label className="answer-label" htmlFor="quiz-answer">
+              Enter answer:
+            </label>
+            <div className="answer-row">
+              <button
+                className="btn-nav"
+                onClick={handlePrev}
+                disabled={currentIndex === 0}
+              >
+                ← PREV
+              </button>
+              <input
+                id="quiz-answer"
+                ref={answerInputRef}
+                type="text"
+                className={`answer-input ${currentItem.isCorrect ? 'correct' : ''}`}
+                value={currentItem.inputValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button
+                className="btn-nav"
+                onClick={handleNext}
+                disabled={currentIndex === quizItems.length - 1}
+              >
+                NEXT →
+              </button>
             </div>
           </div>
 
-          <div className="stat-item">
-            <div className="stat-label">Time</div>
-            <div className="stat-value timer">{formatTime(timeLeft)}</div>
+          <div className="active-stats">
+            <div className="stat-block">
+              <div className="stat-label">
+                SCORE
+                <ChevronDown size={12} strokeWidth={2.5} />
+              </div>
+              <div className="stat-value">
+                {score}/{TOTAL_ITEMS}
+              </div>
+            </div>
+
+            <button
+              className="btn-pause"
+              onClick={() => setIsPaused((p) => !p)}
+              aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+            >
+              {isPaused ? <Play size={16} /> : <Pause size={16} />}
+            </button>
+
+            <div className="stat-block">
+              <div className="stat-label">
+                TIMER
+                <ChevronDown size={12} strokeWidth={2.5} />
+              </div>
+              <div className="stat-value">{formatTime(timeLeft)}</div>
+            </div>
+
+            <button className="btn-give-up" onClick={handleGiveUp}>
+              Give Up
+            </button>
           </div>
         </div>
+      )}
 
-        <div className="header-buttons">
-          {!quizStarted && !finished && (
-            <button className="btn btn-primary" onClick={handleStartQuiz}>
-              <Play size={20} />
-              Start Quiz
-            </button>
-          )}
-          <button className="btn btn-secondary" onClick={handleReset}>
-            <RotateCcw size={20} />
-            Reset
-          </button>
-        </div>
-      </div>
-
-      {/* Results Screen */}
       {finished && (
         <div className="results-overlay">
           <div className="results-card">
@@ -151,38 +284,34 @@ export const Quiz = () => {
               </div>
             </div>
             <div className="accuracy">Accuracy: {Math.round((score / TOTAL_ITEMS) * 100)}%</div>
-            <button className="btn btn-primary" onClick={handleReset}>
-              <RotateCcw size={20} />
-              Try Again
+            <button className="btn-play" onClick={handleReset}>
+              PLAY QUIZ
             </button>
           </div>
         </div>
       )}
 
-      {/* Quiz Grid */}
-      <div className={`quiz-grid ${!quizStarted && !finished ? 'quiz-disabled' : ''}`}>
+      <div className={`quiz-grid ${!quizStarted && !isLearnMode ? 'quiz-disabled' : ''}`}>
         {quizItems.map((item, idx) => (
-          <div key={item.group.id + idx} className="quiz-item">
+          <button
+            key={item.group.id + idx}
+            type="button"
+            className={[
+              'quiz-item',
+              quizStarted && idx === currentIndex ? 'active' : '',
+              item.isCorrect ? 'correct' : '',
+              isLearnMode ? 'learn-item' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            onClick={() => handleSelectItem(idx)}
+            disabled={!quizStarted && !isLearnMode}
+          >
             <div className="item-image">
-              <svg
-                viewBox="0 0 200 200"
-                xmlns="http://www.w3.org/2000/svg"
-                className="functional-group-svg"
-                dangerouslySetInnerHTML={{ __html: item.group.svg }}
-              />
+              <FunctionalGroupImage group={item.group} />
             </div>
-            <input
-              ref={(el) => {
-                if (el) inputRefs.current[item.group.id + idx] = el;
-              }}
-              type="text"
-              placeholder="Type name..."
-              value={item.inputValue}
-              onChange={(e) => handleInputChange(idx, e.target.value)}
-              disabled={!quizStarted || finished}
-              className={`quiz-input ${item.isCorrect ? 'correct' : ''}`}
-            />
-          </div>
+            {isLearnMode && <div className="learn-label">{item.group.name}</div>}
+          </button>
         ))}
       </div>
     </div>
