@@ -53,6 +53,15 @@
   border-radius: 50%;
 }
 
+.language-button {
+  width: auto;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .sign-in-button:hover,
 .icon-button:hover {
   background: #f2f2f2;
