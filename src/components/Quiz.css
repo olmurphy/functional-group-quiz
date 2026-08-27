@@ -279,14 +279,6 @@
   background: var(--color-active);
 }
 
-.quiz-item.correct {
-  background: var(--color-correct);
-}
-
-.quiz-item.correct.active {
-  background: var(--color-active);
-}
-
 .quiz-item:disabled {
   cursor: default;
 }

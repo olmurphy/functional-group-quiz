@@ -91,12 +91,26 @@ export const Quiz = () => {
     initializeQuiz({ fixedOrder: true });
   };
 
+  const findAdjacentUnansweredIndex = (startIndex: number, direction: number) => {
+    let index = startIndex + direction;
+
+    while (index >= 0 && index < quizItems.length && quizItems[index].isCorrect) {
+      index += direction;
+    }
+
+    return index >= 0 && index < quizItems.length ? index : startIndex;
+  };
+
   const handleInputChange = (value: string) => {
+    const currentQuizItem = quizItems[currentIndex];
+    if (!currentQuizItem) return;
+
+    const isCorrect = isAnswerCorrect(value, currentQuizItem.group.name, currentQuizItem.group.alternateNames);
+
     setQuizItems((prev) =>
       prev.map((item, idx) => {
         if (idx !== currentIndex) return item;
 
-        const isCorrect = isAnswerCorrect(value, item.group.name, item.group.alternateNames);
         const wasCorrectBefore = item.isCorrect;
 
         if (isCorrect && !wasCorrectBefore) {
@@ -110,14 +124,18 @@ export const Quiz = () => {
         };
       }),
     );
+
+    if (isCorrect) {
+      setCurrentIndex(findAdjacentUnansweredIndex(currentIndex, 1));
+    }
   };
 
   const handlePrev = () => {
-    setCurrentIndex((i) => Math.max(0, i - 1));
+    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, -1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((i) => Math.min(quizItems.length - 1, i + 1));
+    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, 1));
   };
 
   const handleSelectItem = (index: number) => {
@@ -214,7 +232,11 @@ export const Quiz = () => {
               Enter answer:
             </label>
             <div className="answer-row">
-              <button className="btn-nav" onClick={handlePrev} disabled={currentIndex === 0}>
+              <button
+                className="btn-nav"
+                onClick={handlePrev}
+                disabled={findAdjacentUnansweredIndex(currentIndex, -1) === currentIndex}
+              >
                 ← PREV
               </button>
               <input
@@ -227,7 +249,11 @@ export const Quiz = () => {
                 autoComplete="off"
                 spellCheck={false}
               />
-              <button className="btn-nav" onClick={handleNext} disabled={currentIndex === quizItems.length - 1}>
+              <button
+                className="btn-nav"
+                onClick={handleNext}
+                disabled={findAdjacentUnansweredIndex(currentIndex, 1) === currentIndex}
+              >
                 NEXT →
               </button>
             </div>
@@ -281,12 +307,12 @@ export const Quiz = () => {
               .filter(Boolean)
               .join(" ")}
             onClick={() => handleSelectItem(idx)}
-            disabled={(!quizStarted && !isLearnMode) || finished}
+            disabled={(!quizStarted && !isLearnMode) || finished || item.isCorrect}
           >
             <div className="item-image">
               <FunctionalGroupImage group={item.group} />
             </div>
-            {(isLearnMode || finished) && (
+            {(isLearnMode || finished || (item.isCorrect === true)) && (
               <div className={`learn-label ${finished && !item.inputValue.trim() ? "unanswered-label" : ""}`}>
                 {item.group.name}
               </div>
