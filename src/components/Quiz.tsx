@@ -91,14 +91,21 @@ export const Quiz = () => {
     initializeQuiz({ fixedOrder: true });
   };
 
-  const findAdjacentUnansweredIndex = (startIndex: number, direction: number) => {
-    let index = startIndex + direction;
+  const findAdjacentUnansweredIndex = (startIndex: number, direction: number, wrap = false) => {
+    let index = startIndex;
 
-    while (index >= 0 && index < quizItems.length && quizItems[index].isCorrect) {
+    for (let steps = 0; steps < quizItems.length; steps += 1) {
       index += direction;
+
+      if (wrap) {
+        index = (index + quizItems.length) % quizItems.length;
+      }
+
+      if (index < 0 || index >= quizItems.length) return startIndex;
+      if (!quizItems[index].isCorrect) return index;
     }
 
-    return index >= 0 && index < quizItems.length ? index : startIndex;
+    return startIndex;
   };
 
   const handleInputChange = (value: string) => {
@@ -131,11 +138,11 @@ export const Quiz = () => {
   };
 
   const handlePrev = () => {
-    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, -1));
+    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, -1, true));
   };
 
   const handleNext = () => {
-    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, 1));
+    setCurrentIndex((i) => findAdjacentUnansweredIndex(i, 1, true));
   };
 
   const handleSelectItem = (index: number) => {
@@ -235,7 +242,7 @@ export const Quiz = () => {
               <button
                 className="btn-nav"
                 onClick={handlePrev}
-                disabled={findAdjacentUnansweredIndex(currentIndex, -1) === currentIndex}
+                disabled={findAdjacentUnansweredIndex(currentIndex, -1, true) === currentIndex}
               >
                 ← PREV
               </button>
@@ -252,7 +259,7 @@ export const Quiz = () => {
               <button
                 className="btn-nav"
                 onClick={handleNext}
-                disabled={findAdjacentUnansweredIndex(currentIndex, 1) === currentIndex}
+                disabled={findAdjacentUnansweredIndex(currentIndex, 1, true) === currentIndex}
               >
                 NEXT →
               </button>
@@ -312,7 +319,7 @@ export const Quiz = () => {
             <div className="item-image">
               <FunctionalGroupImage group={item.group} />
             </div>
-            {(isLearnMode || finished || (item.isCorrect === true)) && (
+            {(isLearnMode || finished || item.isCorrect === true) && (
               <div className={`learn-label ${finished && !item.inputValue.trim() ? "unanswered-label" : ""}`}>
                 {item.group.name}
               </div>
