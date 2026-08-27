@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { functionalGroups, shuffleArray, isAnswerCorrect, type FunctionalGroup } from '../data/functionalGroups';
-import { GraduationCap, ChevronDown, Pause, Play } from 'lucide-react';
-import FunctionalGroupImage from './FunctionalGroupImage';
-import './Quiz.css';
+import { useState, useEffect, useRef } from "react";
+import { functionalGroups, shuffleArray, isAnswerCorrect, type FunctionalGroup } from "../data/functionalGroups";
+import { GraduationCap, ChevronDown, Pause, Play } from "lucide-react";
+import FunctionalGroupImage from "./FunctionalGroupImage";
+import "./Quiz.css";
 
 interface QuizItem {
   group: FunctionalGroup;
@@ -14,7 +14,7 @@ interface QuizItem {
 const TOTAL_ITEMS = functionalGroups.length;
 const TOTAL_TIME = 5 * 60;
 
-type Mode = 'quiz' | 'learn';
+type Mode = "quiz" | "learn";
 
 export const Quiz = () => {
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
@@ -23,13 +23,13 @@ export const Quiz = () => {
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [mode, setMode] = useState<Mode>('quiz');
+  const [mode, setMode] = useState<Mode>("quiz");
   const [isPaused, setIsPaused] = useState(false);
   const answerInputRef = useRef<HTMLInputElement | null>(null);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!quizStarted || finished || mode !== 'quiz' || isPaused) return;
+    if (!quizStarted || finished || mode !== "quiz" || isPaused) return;
 
     timerIntervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -59,7 +59,7 @@ export const Quiz = () => {
       group,
       index,
       isCorrect: false,
-      inputValue: '',
+      inputValue: "",
     }));
     setQuizItems(items);
     setQuizStarted(false);
@@ -75,14 +75,14 @@ export const Quiz = () => {
   }, []);
 
   const handleStartQuiz = () => {
-    setMode('quiz');
+    setMode("quiz");
     initializeQuiz();
     setQuizStarted(true);
   };
 
   const handleLearnMode = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    setMode('learn');
+    setMode("learn");
     setQuizStarted(false);
     setFinished(false);
     setTimeLeft(TOTAL_TIME);
@@ -108,7 +108,7 @@ export const Quiz = () => {
           inputValue: value,
           isCorrect,
         };
-      })
+      }),
     );
   };
 
@@ -130,19 +130,16 @@ export const Quiz = () => {
     setFinished(true);
   };
 
-  const handleReset = () => {
-    initializeQuiz();
-  };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const isLearnMode = mode === 'learn';
+  const isLearnMode = mode === "learn";
   const currentItem = quizItems[currentIndex];
   const allCorrect = score === TOTAL_ITEMS && quizStarted;
+  const averageScore = Math.round((score / TOTAL_ITEMS) * 100);
 
   useEffect(() => {
     if (allCorrect && !finished) {
@@ -153,7 +150,7 @@ export const Quiz = () => {
 
   return (
     <div className="quiz-container">
-      {!quizStarted && !isLearnMode && (
+      {(!quizStarted || finished) && !isLearnMode && (
         <header className="quiz-header">
           <div className="header-left">
             <button className="btn-play" onClick={handleStartQuiz}>
@@ -166,6 +163,11 @@ export const Quiz = () => {
           </div>
 
           <div className="header-right">
+            <div className="stat-block">
+              <div className="stat-label">AVG SCORE</div>
+              <div className="stat-value">{averageScore}%</div>
+            </div>
+
             <div className="stat-block">
               <div className="stat-label">
                 SCORE
@@ -212,28 +214,20 @@ export const Quiz = () => {
               Enter answer:
             </label>
             <div className="answer-row">
-              <button
-                className="btn-nav"
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-              >
+              <button className="btn-nav" onClick={handlePrev} disabled={currentIndex === 0}>
                 ← PREV
               </button>
               <input
                 id="quiz-answer"
                 ref={answerInputRef}
                 type="text"
-                className={`answer-input ${currentItem.isCorrect ? 'correct' : ''}`}
+                className={`answer-input ${currentItem.isCorrect ? "correct" : ""}`}
                 value={currentItem.inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
               />
-              <button
-                className="btn-nav"
-                onClick={handleNext}
-                disabled={currentIndex === quizItems.length - 1}
-              >
+              <button className="btn-nav" onClick={handleNext} disabled={currentIndex === quizItems.length - 1}>
                 NEXT →
               </button>
             </div>
@@ -253,7 +247,7 @@ export const Quiz = () => {
             <button
               className="btn-pause"
               onClick={() => setIsPaused((p) => !p)}
-              aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+              aria-label={isPaused ? "Resume timer" : "Pause timer"}
             >
               {isPaused ? <Play size={16} /> : <Pause size={16} />}
             </button>
@@ -273,44 +267,30 @@ export const Quiz = () => {
         </div>
       )}
 
-      {finished && (
-        <div className="results-overlay">
-          <div className="results-card">
-            <h2 className="results-title">Quiz Finished!</h2>
-            <div className="final-score">
-              <div className="score-circle">
-                <div className="score-number">{score}</div>
-                <div className="score-total">of {TOTAL_ITEMS}</div>
-              </div>
-            </div>
-            <div className="accuracy">Accuracy: {Math.round((score / TOTAL_ITEMS) * 100)}%</div>
-            <button className="btn-play" onClick={handleReset}>
-              PLAY QUIZ
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className={`quiz-grid ${!quizStarted && !isLearnMode ? 'quiz-disabled' : ''}`}>
+      <div className={`quiz-grid ${(!quizStarted && !isLearnMode) || finished ? "quiz-disabled" : ""}`}>
         {quizItems.map((item, idx) => (
           <button
             key={item.group.id + idx}
             type="button"
             className={[
-              'quiz-item',
-              quizStarted && idx === currentIndex ? 'active' : '',
-              item.isCorrect ? 'correct' : '',
-              isLearnMode ? 'learn-item' : '',
+              "quiz-item",
+              quizStarted && !finished && idx === currentIndex ? "active" : "",
+              item.isCorrect ? "correct" : "",
+              isLearnMode || finished ? "learn-item" : "",
             ]
               .filter(Boolean)
-              .join(' ')}
+              .join(" ")}
             onClick={() => handleSelectItem(idx)}
-            disabled={!quizStarted && !isLearnMode}
+            disabled={(!quizStarted && !isLearnMode) || finished}
           >
             <div className="item-image">
               <FunctionalGroupImage group={item.group} />
             </div>
-            {isLearnMode && <div className="learn-label">{item.group.name}</div>}
+            {(isLearnMode || finished) && (
+              <div className={`learn-label ${finished && !item.inputValue.trim() ? "unanswered-label" : ""}`}>
+                {item.group.name}
+              </div>
+            )}
           </button>
         ))}
       </div>

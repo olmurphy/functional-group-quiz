@@ -312,6 +312,10 @@
   line-height: 1.2;
 }
 
+.learn-label.unanswered-label {
+  color: #e00000;
+}
+
 .quiz-item.learn-item {
   cursor: default;
 }
