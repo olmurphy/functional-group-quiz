@@ -8,16 +8,10 @@ export interface FunctionalGroup {
 
 export const functionalGroups: FunctionalGroup[] = [
   {
-    id: "phenyl",
-    name: "Phenyl",
-    alternateNames: ["benzene", "aromatic", "aryl"],
-    image: "images/phenyl.png",
-  },
-  {
-    id: "tertiary_amine",
-    name: "Tertiary Amine",
+    id: "amine",
+    name: "Amine",
     alternateNames: ["3° amine", "tertiary amine", "amine"],
-    image: "images/tertiary-amine.png",
+    image: "images/amine.png",
   },
   {
     id: "aldehyde",
@@ -44,8 +38,8 @@ export const functionalGroups: FunctionalGroup[] = [
     image: "images/cyclopentane.png",
   },
   {
-    id: "sulfide",
-    name: "Sulfide",
+    id: "thioether",
+    name: "thioether",
     alternateNames: ["thioether", "sulfide"],
     image: "images/sulfide.png",
   },
@@ -98,10 +92,10 @@ export const functionalGroups: FunctionalGroup[] = [
     image: "images/ketone.png",
   },
   {
-    id: "alkyl_chloride",
-    name: "Alkyl Chloride",
+    id: "alkyl_halide",
+    name: "Alkyl Halide",
     alternateNames: ["alkyl halide", "chloride", "alkyl chloride", "Cl"],
-    image: "images/alkyl-chloride.png",
+    image: "images/alkyl-halide.png",
   },
   {
     id: "alkene",
@@ -122,16 +116,22 @@ export const functionalGroups: FunctionalGroup[] = [
     image: "images/acid-anhydride.png",
   },
   {
-    id: "acyl_chloride",
-    name: "Acyl Chloride",
+    id: "acid_chloride",
+    name: "Acid Chloride",
     alternateNames: ["acid chloride", "acyl chloride", "acyl halide"],
-    image: "images/acyl-chloride.png",
+    image: "images/acid-chloride.png",
   },
   {
     id: "alcohol",
     name: "Alcohol",
     alternateNames: ["hydroxyl", "alcohol", "OH"],
     image: "images/alcohol.png",
+  },
+  {
+    id: "arene",
+    name: "Arene",
+    alternateNames: ["arene", "benzene"],
+    image: "images/arene.png",
   },
 ];
 
