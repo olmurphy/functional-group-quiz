@@ -3,6 +3,7 @@ import { functionalGroups, shuffleArray, isAnswerCorrect, type FunctionalGroup }
 import { GraduationCap, ChevronDown, Pause, Play } from "lucide-react";
 import FunctionalGroupImage from "./FunctionalGroupImage";
 import "./Quiz.css";
+import { translations, type LanguageCode } from "../data/translations";
 
 interface QuizItem {
   group: FunctionalGroup;
@@ -15,34 +16,9 @@ const TOTAL_ITEMS = functionalGroups.length;
 const TOTAL_TIME = 5 * 60;
 
 type Mode = "quiz" | "learn";
-type Language = "en" | "zh";
-
-const groupNames: Record<string, string> = {
-  amine: "胺",
-  aldehyde: "醛",
-  peroxide: "过氧化物",
-  amide: "酰胺",
-  cyclopentane: "环戊烷",
-  thioether: "硫醚",
-  nitrile: "腈",
-  epoxide: "环氧化物",
-  alkyne: "炔烃",
-  thiol: "硫醇",
-  ester: "酯",
-  alkane: "烷烃",
-  carboxylic_acid: "羧酸",
-  ketone: "酮",
-  alkyl_halide: "卤代烷",
-  alkene: "烯烃",
-  ether: "醚",
-  acid_anhydride: "酸酐",
-  acid_chloride: "酰氯",
-  alcohol: "醇",
-  arene: "芳烃",
-};
 
 interface QuizProps {
-  language: Language;
+  language: LanguageCode;
 }
 
 export const Quiz = ({ language }: QuizProps) => {
@@ -143,7 +119,7 @@ export const Quiz = ({ language }: QuizProps) => {
 
     const isCorrect = isAnswerCorrect(value, currentQuizItem.group.name, [
       ...(currentQuizItem.group.alternateNames ?? []),
-      groupNames[currentQuizItem.group.id],
+      translations.zh.groupNames[currentQuizItem.group.id],
     ]);
 
     setQuizItems((prev) =>
@@ -197,8 +173,8 @@ export const Quiz = ({ language }: QuizProps) => {
   const currentItem = quizItems[currentIndex];
   const allCorrect = score === TOTAL_ITEMS && quizStarted;
   const averageScore = Math.round((score / TOTAL_ITEMS) * 100);
-  const isChinese = language === "zh";
-  const getGroupName = (group: FunctionalGroup) => (isChinese ? groupNames[group.id] : group.name);
+  const copy = translations[language];
+  const getGroupName = (group: FunctionalGroup) => copy.groupNames[group.id] ?? group.name;
 
   useEffect(() => {
     if (allCorrect && !finished) {
@@ -213,23 +189,23 @@ export const Quiz = ({ language }: QuizProps) => {
         <header className="quiz-header">
           <div className="header-left">
             <button className="btn-play" onClick={handleStartQuiz}>
-              {isChinese ? "开始测验" : "PLAY QUIZ"}
+              {copy.playQuiz}
             </button>
             <button className="btn-learn" onClick={handleLearnMode}>
               <GraduationCap size={18} strokeWidth={2} />
-              {isChinese ? "学习" : "Learn"}
+              {copy.learn}
             </button>
           </div>
 
           <div className="header-right">
             <div className="stat-block">
-              <div className="stat-label">{isChinese ? "平均分" : "AVG SCORE"}</div>
+              <div className="stat-label">{copy.averageScore}</div>
               <div className="stat-value">{averageScore}%</div>
             </div>
 
             <div className="stat-block">
               <div className="stat-label">
-                {isChinese ? "得分" : "SCORE"}
+                {copy.score}
                 <ChevronDown size={12} strokeWidth={2.5} />
               </div>
               <div className="stat-value">
@@ -239,7 +215,7 @@ export const Quiz = ({ language }: QuizProps) => {
 
             <div className="stat-block">
               <div className="stat-label">
-                {isChinese ? "计时器" : "TIMER"}
+                {copy.timer}
                 <ChevronDown size={12} strokeWidth={2.5} />
               </div>
               <div className="stat-value">{formatTime(timeLeft)}</div>
@@ -252,11 +228,11 @@ export const Quiz = ({ language }: QuizProps) => {
         <header className="quiz-header">
           <div className="header-left">
             <button className="btn-play" onClick={handleStartQuiz}>
-              {isChinese ? "开始测验" : "PLAY QUIZ"}
+              {copy.playQuiz}
             </button>
             <button className="btn-learn active" onClick={handleLearnMode}>
               <GraduationCap size={18} strokeWidth={2} />
-              {isChinese ? "学习" : "Learn"}
+              {copy.learn}
             </button>
           </div>
         </header>
@@ -270,7 +246,7 @@ export const Quiz = ({ language }: QuizProps) => {
 
           <div className="answer-section">
             <label className="answer-label" htmlFor="quiz-answer">
-              {isChinese ? "请输入答案：" : "Enter answer:"}
+              {copy.enterAnswer}
             </label>
             <div className="answer-row">
               <button
@@ -278,7 +254,7 @@ export const Quiz = ({ language }: QuizProps) => {
                 onClick={handlePrev}
                 disabled={findAdjacentUnansweredIndex(currentIndex, -1, true) === currentIndex}
               >
-                ← {isChinese ? "上一个" : "PREV"}
+                ← {copy.previous}
               </button>
               <input
                 id="quiz-answer"
@@ -295,7 +271,7 @@ export const Quiz = ({ language }: QuizProps) => {
                 onClick={handleNext}
                 disabled={findAdjacentUnansweredIndex(currentIndex, 1, true) === currentIndex}
               >
-                {isChinese ? "下一个" : "NEXT"} →
+                {copy.next} →
               </button>
             </div>
           </div>
@@ -303,7 +279,7 @@ export const Quiz = ({ language }: QuizProps) => {
           <div className="active-stats">
             <div className="stat-block">
               <div className="stat-label">
-                {isChinese ? "得分" : "SCORE"}
+                {copy.score}
                 <ChevronDown size={12} strokeWidth={2.5} />
               </div>
               <div className="stat-value">
@@ -314,21 +290,21 @@ export const Quiz = ({ language }: QuizProps) => {
             <button
               className="btn-pause"
               onClick={() => setIsPaused((p) => !p)}
-              aria-label={isPaused ? (isChinese ? "继续计时" : "Resume timer") : isChinese ? "暂停计时" : "Pause timer"}
+              aria-label={isPaused ? copy.resumeTimer : copy.pauseTimer}
             >
               {isPaused ? <Play size={16} /> : <Pause size={16} />}
             </button>
 
             <div className="stat-block">
               <div className="stat-label">
-                {isChinese ? "计时器" : "TIMER"}
+                {copy.timer}
                 <ChevronDown size={12} strokeWidth={2.5} />
               </div>
               <div className="stat-value">{formatTime(timeLeft)}</div>
             </div>
 
             <button className="btn-give-up" onClick={handleGiveUp}>
-              {isChinese ? "放弃" : "Give Up"}
+              {copy.giveUp}
             </button>
           </div>
         </div>

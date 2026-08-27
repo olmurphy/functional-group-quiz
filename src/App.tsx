@@ -3,29 +3,35 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Languages, Settings } from "lucide-react";
 import "./App.css";
 import Quiz from "./components/Quiz";
+import { languageOptions, translations, type LanguageCode } from "./data/translations";
 
 function App() {
-  const [language, setLanguage] = useState<"en" | "zh">("en");
-  const isChinese = language === "zh";
+  const [language, setLanguage] = useState<LanguageCode>("en");
+  const copy = translations[language];
 
   return (
     <div className="app">
       <header className="site-header">
-        <div className="site-brand">{isChinese ? "测验" : "Quiz"}</div>
+        <div className="site-brand">{copy.brand}</div>
         <nav className="site-actions" aria-label="Site navigation">
           <button className="sign-in-button" type="button">
-            {isChinese ? "登录" : "Sign In"}
+            {copy.signIn}
           </button>
-          <button
-            className="icon-button language-button"
-            type="button"
-            aria-label={isChinese ? "切换到英文" : "Switch to Chinese"}
-            onClick={() => setLanguage(isChinese ? "en" : "zh")}
-          >
+          <label className="language-picker">
             <Languages size={22} strokeWidth={2} />
-            <span>{isChinese ? "EN" : "中文"}</span>
-          </button>
-          <button className="icon-button" type="button" aria-label={isChinese ? "设置" : "Settings"}>
+            <select
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as LanguageCode)}
+              aria-label={copy.chooseLanguage}
+            >
+              {Object.entries(languageOptions).map(([code, label]) => (
+                <option key={code} value={code}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="icon-button" type="button" aria-label={copy.settings}>
             <Settings size={22} strokeWidth={2} />
           </button>
         </nav>
